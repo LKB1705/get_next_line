@@ -1,16 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                         ::::::::           */
+/*                                                        :::      ::::::::   */
 /*   get_next_line.c                                    :+:      :+:    :+:   */
-/*                                                      +:+                   */
-/*   By: obohbot <marvin@42.fr>                        +#+                    */
-/*                                                    +#+                     */
-/*   Created: 2026/10/14 13:17:09 by obohbot        #+#    #+#                */
-/*   Updated: 2026/10/21 10:30:00 by obohbot          ###   ########.fr       */
+/*                                                    +:+ +:+         +:+     */
+/*   By: obohbot <obohbot@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/10/14 13:17:09 by obohbot           #+#    #+#             */
+/*   Updated: 2026/10/27 15:30:00 by obohbot          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-char	*copyf(char *stash)
+#include "get_next_line.h"
+
+static char	*copyf(char *stash)
 {
 	int		i;
 	char	*str;
@@ -38,7 +40,7 @@ char	*copyf(char *stash)
 	return (str);
 }
 
-char	*clear_stash(char *stash)
+static char	*clear_stash(char *stash)
 {
 	int		i;
 	int		j;
@@ -54,7 +56,10 @@ char	*clear_stash(char *stash)
 	}
 	str = (char *)malloc(ft_strlen(stash) - i + 1);
 	if (!str)
+	{
+		free(stash);
 		return (NULL);
+	}
 	i++;
 	j = 0;
 	while (stash[i])
@@ -64,30 +69,41 @@ char	*clear_stash(char *stash)
 	return (str);
 }
 
-char	*readf(int fd, char *stash)
+static char	*read_loop(int fd, char *stash, char *buffer)
 {
-	char			*buffer;
-	ssize_t			lu;
+	ssize_t	lu;
+	char	*tmp;
 
-	buffer = (char *)malloc(BUFFER_SIZE + 1);
-	if (!buffer)
-		return (NULL);
 	lu = 1;
-	while (!ft_strchr(stash, '\n') && lu > 0)
+	while (lu > 0 && !ft_strchr(stash, '\n'))
 	{
 		lu = read(fd, buffer, BUFFER_SIZE);
-		if (lu == -1)
+		if (lu < 0)
 		{
-			free(buffer);
 			free(stash);
 			return (NULL);
 		}
 		buffer[lu] = '\0';
-		stash = ft_strjoin(stash, buffer);
-		free(stash);
+		tmp = stash;
+		stash = ft_strjoin(tmp, buffer);
+		free(tmp);
 		if (!stash)
-			break ;
+			return (NULL);
 	}
+	return (stash);
+}
+
+static char	*readf(int fd, char *stash)
+{
+	char	*buffer;
+
+	buffer = (char *)malloc(BUFFER_SIZE + 1);
+	if (!buffer)
+	{
+		free(stash);
+		return (NULL);
+	}
+	stash = read_loop(fd, stash, buffer);
 	free(buffer);
 	return (stash);
 }
