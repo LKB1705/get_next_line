@@ -1,16 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
-/*                                                         ::::::::           */
-/*   get_next_line_bonus.c                               :+:    :+:           */
-/*                                                      +:+                   */
-/*   By: obohbot <marvin@42.fr>                        +#+                    */
-/*                                                    +#+                     */
-/*   Created: 2026/10/27 15:16:35 by obohbot        #+#    #+#                */
-/*   Updated: 2026/10/27 15:31:15 by obohbot        ########   odam.nl        */
+/*                                                        :::      ::::::::   */
+/*   get_next_line_bonus.c                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: obohbot <obohbot@student.42lausanne.ch>    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/10/27 17:20:00 by obohbot           #+#    #+#             */
+/*   Updated: 2026/10/27 17:20:00 by obohbot          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-char	*copyf(char *stash)
+#include "get_next_line_bonus.h"
+
+static char	*copyf(char *stash)
 {
 	int		i;
 	char	*str;
@@ -38,7 +40,7 @@ char	*copyf(char *stash)
 	return (str);
 }
 
-char	*clear_stash(char *stash)
+static char	*clear_stash(char *stash)
 {
 	int		i;
 	int		j;
@@ -54,7 +56,10 @@ char	*clear_stash(char *stash)
 	}
 	str = (char *)malloc(ft_strlen(stash) - i + 1);
 	if (!str)
+	{
+		free(stash);
 		return (NULL);
+	}
 	i++;
 	j = 0;
 	while (stash[i])
@@ -64,37 +69,48 @@ char	*clear_stash(char *stash)
 	return (str);
 }
 
-char	*readf(int fd, char *stash)
+static char	*read_loop(int fd, char *stash, char *buffer)
 {
-	char			*buffer;
-	ssize_t			lu;
+	ssize_t	lu;
+	char	*tmp;
 
-	buffer = (char *)malloc(BUFFER_SIZE + 1);
-	if (!buffer)
-		return (NULL);
 	lu = 1;
-	while (!ft_strchr(stash, '\n') && lu > 0)
+	while (lu > 0 && !ft_strchr(stash, '\n'))
 	{
 		lu = read(fd, buffer, BUFFER_SIZE);
-		if (lu == -1)
+		if (lu < 0)
 		{
-			free(buffer);
 			free(stash);
 			return (NULL);
 		}
 		buffer[lu] = '\0';
-		stash = ft_strjoin(stash, buffer);
-		free(stash);
+		tmp = stash;
+		stash = ft_strjoin(tmp, buffer);
+		free(tmp);
 		if (!stash)
-			break ;
+			return (NULL);
 	}
+	return (stash);
+}
+
+static char	*readf(int fd, char *stash)
+{
+	char	*buffer;
+
+	buffer = (char *)malloc(BUFFER_SIZE + 1);
+	if (!buffer)
+	{
+		free(stash);
+		return (NULL);
+	}
+	stash = read_loop(fd, stash, buffer);
 	free(buffer);
 	return (stash);
 }
 
 char	*get_next_line(int fd)
 {
-	static char	stash[FD_MAX];
+	static char	*stash[FD_MAX];
 	char		*to_print;
 
 	if (fd < 0 || fd >= FD_MAX || BUFFER_SIZE <= 0)
