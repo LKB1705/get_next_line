@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/norminette-OK-success?style=for-the-badge" alt="Norminette"/>
 </p>
 
-*Ce projet a été créé dans le cadre du cursus de l'école 42 Lausanne par <obohbot>.*
+*Ce projet a été créé dans le cadre du cursus de l'école 42 Lausanne par obohbot.*
 
 # get_next_line
 
